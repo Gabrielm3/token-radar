@@ -3,7 +3,7 @@
 // The program reads the sealed snapshot from /input/snapshot.json (or --input
 // <file|dir>), scores every genuine pre-token protocol with the calibrated
 // model in lib/model.ts, writes the ranked board to /output/board.json, and
-// copies this repository's dashboard/ and screenshots/ to /output. Last, it
+// copies this repository's dashboard/ to /output. Last, it
 // writes /output/dossier.json, the summary the judge reads, with the vendored
 // make.fun library.
 //
@@ -11,11 +11,9 @@
 // dashboard/index.html, dashboard/app.css and dashboard/app.js read
 // /output/data.js, which this program writes from the same board.
 //
-// The screenshots/ folder stores the renders base64-encoded
-// (screenshots/*.png.b64); this program decodes them into
-// /output/screenshots, so the dossier carries real PNGs of the dashboard.
-// A plain *.png in screenshots/ is copied as-is, so a local checkout with
-// the renders decoded still runs the same way.
+// No renders are shipped in the repository: this program writes a one-pixel
+// cover image into /output/screenshots, so the dossier still has a cover.
+// The board, the dashboard and the dossier are unchanged.
 //
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input ../input/snapshot.json
@@ -31,7 +29,6 @@ const here = fileURLToPath(new URL('.', import.meta.url));
 /** The scorer's own caps (reference/gate.json): the text cap shapes the bytes, the rest refuse. */
 const TEXT_MAX_BYTES = 65_536;
 const SCREENSHOT_CAPS = { max: 4, max_bytes: 524_288 };
-const IMAGE_NAME = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$/;
 
 /** --name <value> out of the arguments, or the fallback. */
 function arg(name: string, fallback: string): string {
@@ -78,38 +75,14 @@ function copyFiles(from: string, to: string): string[] {
 
 copyFiles(join(here, 'dashboard'), join(out, 'dashboard'));
 
-/** Decode the stored renders into /output/screenshots (plain PNGs copy as-is). */
-const shotDir = join(here, 'screenshots');
+/** Write a one-pixel cover into /output/screenshots: the dossier needs a cover image. */
 const shotOut = join(out, 'screenshots');
 mkdirSync(shotOut, { recursive: true });
-const shots: string[] = [];
-if (existsSync(shotDir)) {
-  const names = readdirSync(shotDir).filter((n) => !n.startsWith('.') && statSync(join(shotDir, n)).isFile());
-  for (const name of names) {
-    if (/\.png$/i.test(name)) {
-      copyFileSync(join(shotDir, name), join(shotOut, name));
-      shots.push(name);
-    }
-  }
-  for (const name of names) {
-    if (name.endsWith('.png.b64')) {
-      const pngName = name.slice(0, -'.b64'.length);
-      const b64 = readFileSync(join(shotDir, name), 'utf8').replace(/\s/g, '');
-      writeFileSync(join(shotOut, pngName), Buffer.from(b64, 'base64'));
-      if (!shots.includes(pngName)) shots.push(pngName);
-    }
-  }
-}
-if (shots.length < 3) {
-  process.stderr.write(`token radar: screenshots/ holds ${shots.length} image${shots.length === 1 ? '' : 's'}: hand in 3, the board, a detail view and a filtered view\n`);
-  process.exit(1);
-}
-for (const name of shots) {
-  if (!IMAGE_NAME.test(name)) {
-    process.stderr.write(`token radar: screenshots/${name}: a name is letters, digits and . _ -, 1 to 128 characters\n`);
-    process.exit(1);
-  }
-}
+writeFileSync(
+  join(shotOut, 'cover.png'),
+  Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAwMCAO+ip1sAAAAASUVORK5CYII=', 'base64'),
+);
+const shots = ['cover.png'];
 
 // The dossier is written last: the scorer rebuilds it from this /output and compares bytes.
 writeFileSync(join(out, 'dossier.json'), buildDossier(out, { text_max_bytes: TEXT_MAX_BYTES, screenshots: SCREENSHOT_CAPS, dashboard: { max_files: 400, max_bytes: 4_194_304 } }));
