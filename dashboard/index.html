@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="pulse" aria-hidden="true"></span><div><h1>TOKEN RADAR</h1><p class="tag">Pre-token protocols, ranked by implied value</p></div></div>
+  <div class="top-meta" id="topMeta"></div>
+</header>
+<main>
+  <section class="stats" id="stats" aria-label="Coverage"></section>
+
+  <nav class="views" aria-label="Views">
+    <button data-view="board" aria-pressed="true">Board</button>
+    <button data-view="live" aria-pressed="false">Live tokens</button>
+    <button data-view="model" aria-pressed="false">Model</button>
+  </nav>
+
+  <section id="view-board">
+    <div class="controls">
+      <label class="field">Search<input id="q" type="search" placeholder="Name or slug" autocomplete="off"></label>
+      <label class="field">Category<select id="cat"></select></label>
+      <label class="field">Chain<select id="chain"></select></label>
+      <label class="field">Scope<select id="scope"><option value="all">All pre-token</option><option value="watchlist">Watchlist only</option><option value="early">Early finds</option></select></label>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="panel"><div class="table-wrap"><table id="board">
+      <thead><tr>
+        <th><button data-sort="rank">#</button></th>
+        <th><button data-sort="name">Protocol</button></th>
+        <th><button data-sort="category">Category</button></th>
+        <th>Chains</th>
+        <th><button data-sort="tvl_usd">TVL</button></th>
+        <th><button data-sort="change_7d">7d</button></th>
+        <th><button data-sort="age_days">Age</button></th>
+        <th><button data-sort="implied_value_usd">Implied value</button></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div></div>
+    <p class="hint">Click a row for its farm plan and the model's working. Click a column header to sort.</p>
+  </section>
+
+  <section id="view-live" hidden>
+    <p class="lede">These tokens already trade, so the board shows the market's own value for them, never a model's. They are here for one reason: their market-cap-to-TVL ratios are what the model's category multiples are fitted on.</p>
+    <div class="panel"><div class="table-wrap"><table>
+      <thead><tr><th>Protocol</th><th>Category</th><th>TVL</th><th>Market cap</th><th>Mcap / TVL</th><th>7d</th></tr></thead>
+      <tbody id="liveRows"></tbody>
+    </table></div></div>
+  </section>
+
+  <section id="view-model" hidden>
+    <div class="panel model-panel"><div id="modelBody"></div></div>
+  </section>
+
+  <aside id="detail" class="detail" hidden aria-label="Protocol detail"></aside>
+
+  <footer class="foot">
+    <p>Data: sealed snapshot of DefiLlama's public protocol list, fetched once. A protocol is shown as pre-token when its record carries no token; the record is not proof, so the board says a protocol records no token, never that it has none.</p>
+    <p>Implied value is this entry's own claim, fitted from the snapshot's live market. It is not a prediction that a token is issued, or when, or at what price. Farming costs real money and real gas; never pay to claim an airdrop.</p>
+  </footer>
+</main>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
